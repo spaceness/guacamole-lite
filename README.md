@@ -1,8 +1,12 @@
+*this is the original readme, this package is under @spaceness/guacamole-lite*
+
 # guacamole-lite
 
 ## Introduction
 
 ### What is `guacamole-lite`?
+
+Forked from https://github.com/vadimpronin/guacamole-lite
 
 `guacamole-lite` is a lightweight Node.js library designed to create servers compatible with the Guacamole protocol.
 
