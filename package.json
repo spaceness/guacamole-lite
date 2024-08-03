@@ -1,7 +1,7 @@
 {
 	"name": "@spaceness/guacamole-lite",
 	"description": "Spaceness fork of guacamole-lite",
-	"version": "0.7.3-spaceness",
+	"version": "0.7.4-spaceness",
 	"type": "module",
 	"scripts": {
 		"prepare": "pnpm typecheck && pnpm check",
