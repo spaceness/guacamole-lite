@@ -125,7 +125,7 @@ class Server extends EventEmitter {
 
 		this.webSocketServer = new Ws.Server(this.wsOptions);
 		this.webSocketServer.on("connection", this.newConnection.bind(this));
-		if (Object.hasOwn(wsOptions, "server") || wsOptions.noServer) {
+		if (!Object.hasOwn(wsOptions, "server") || !wsOptions.noServer) {
 			process.on("SIGTERM", this.close.bind(this));
 			process.on("SIGINT", this.close.bind(this));
 		}
