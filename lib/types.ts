@@ -23,7 +23,7 @@ export interface GuacdOptions {
 	port: number;
 }
 interface BaseProtOptions {
-	args: string;
+	args?: string;
 	hostname?: string;
 	port?: number | string;
 	width?: number;
