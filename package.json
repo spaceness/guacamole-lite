@@ -6,7 +6,7 @@
 	"exports": {
 		".": "./dist/index.js"
 	},
-	"types": "./lib/index.d.ts",
+	"types": "./types/index.d.ts",
 	"scripts": {
 		"prepare": "rm -rf dist && tsc && pnpm check",
 		"check": "biome check --write ."

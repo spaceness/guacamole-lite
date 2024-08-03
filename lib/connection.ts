@@ -5,11 +5,11 @@ import Moment from "moment";
 import type { IncomingMessage } from "node:http";
 import type { ParsedUrlQuery } from "node:querystring";
 import type Websocket from "ws";
-import type { ConnectionSettings, ConnectionType } from "./";
 import GuacdClient from "./client";
 import Crypt from "./crypt";
 import type { LOGLEVEL } from "./enums";
 import type Server from "./server";
+import type { ConnectionSettings, ConnectionType } from "./types";
 
 class ClientConnection {
 	STATE_OPEN: number;
