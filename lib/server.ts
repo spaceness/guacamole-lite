@@ -10,7 +10,7 @@ class Server extends EventEmitter {
 	wsOptions: Ws.ClientOptions;
 	LOGLEVEL: typeof LOGLEVEL;
 	guacdOptions: GuacdOptions;
-	clientOptions: Omit<ClientOptions, "connectionDefaultSettings">;
+	clientOptions: ClientOptions;
 	callbacks: Callback;
 	connectionsCount: number;
 	activeConnections: Map<number, ClientConnection>;
@@ -18,7 +18,7 @@ class Server extends EventEmitter {
 	constructor(
 		wsOptions: Ws.ServerOptions,
 		guacdOptions: GuacdOptions,
-		clientOptions: ClientOptions,
+		clientOptions: Omit<ClientOptions, "connectionDefaultSettings">,
 		callbacks?: Callback,
 	) {
 		super();
