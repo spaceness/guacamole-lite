@@ -146,6 +146,9 @@ class Server extends EventEmitter {
 			new ClientConnection(this, this.connectionsCount, webSocketConnection, upgradeRequest),
 		);
 	}
+	get wsServer() {
+		return this.webSocketServer;
+	}
 }
 
 export default Server;
