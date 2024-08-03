@@ -1,4 +1,4 @@
-const crypto = require("node:crypto");
+import crypto from "node:crypto";
 
 const CIPHER = "aes-256-cbc";
 const SECRET_KEY = "MySuperSecretKeyForParamsToken12";

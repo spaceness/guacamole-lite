@@ -1,19 +1,21 @@
-import Crypto from "node:crypto";
+import Crypto, { type CipherKey, type CipherGCMTypes } from "node:crypto";
+import type Server from "./server";
 
 class Crypt {
-	constructor(app) {
+	server: Server;
+	constructor(app: Server) {
 		this.server = app;
 	}
 
-	decrypt(encodedString) {
-		const encoded = JSON.parse(this.constructor.base64decode(encodedString));
+	decrypt(encodedString: string) {
+		const encoded = JSON.parse(Crypt.base64decode(encodedString));
 
-		encoded.iv = this.constructor.base64decode(encoded.iv);
-		encoded.value = this.constructor.base64decode(encoded.value, "binary");
+		encoded.iv = Crypt.base64decode(encoded.iv);
+		encoded.value = Crypt.base64decode(encoded.value, "binary");
 
 		const decipher = Crypto.createDecipheriv(
-			this.server.clientOptions.crypt.cypher,
-			this.server.clientOptions.crypt.key,
+			this.server.clientOptions.crypt.cypher as CipherGCMTypes,
+			this.server.clientOptions.crypt.key as CipherKey,
 			encoded.iv,
 		);
 
@@ -23,7 +25,7 @@ class Crypt {
 		return JSON.parse(decrypted);
 	}
 
-	static base64decode(string, mode) {
+	static base64decode(string: string, mode?: BufferEncoding) {
 		return Buffer.from(string, "base64").toString(mode || "ascii");
 	}
 }

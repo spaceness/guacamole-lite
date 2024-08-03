@@ -2,145 +2,150 @@ import { EventEmitter } from "node:events";
 import DeepExtend from "deep-extend";
 import Ws from "ws";
 
+import type { IncomingMessage } from "node:http";
 import ClientConnection from "./connection";
+import type { Callback, ClientOptions, GuacdOptions, LOGLEVEL } from "./types";
 
 class Server extends EventEmitter {
-  constructor(wsOptions, guacdOptions, clientOptions, callbacks) {
-    super();
+	wsOptions: Ws.ClientOptions;
+	LOGLEVEL: typeof LOGLEVEL;
+	guacdOptions: GuacdOptions;
+	clientOptions: ClientOptions;
+	callbacks: Callback;
+	connectionsCount: number;
+	activeConnections: Map<number, ClientConnection>;
+	webSocketServer: Ws.WebSocketServer;
+	constructor(
+		wsOptions: Ws.ServerOptions,
+		guacdOptions: GuacdOptions,
+		clientOptions: ClientOptions,
+		callbacks?: Callback,
+	) {
+		super();
 
-    this.LOGLEVEL = {
-      QUIET: 0,
-      ERRORS: 10,
-      NORMAL: 20,
-      VERBOSE: 30,
-      DEBUG: 40,
-    };
+		this.LOGLEVEL = {
+			QUIET: 0,
+			ERRORS: 10,
+			NORMAL: 20,
+			VERBOSE: 30,
+			DEBUG: 40,
+		};
 
-    if (Object.hasOwn(wsOptions, "server")) {
-      this.wsOptions = wsOptions;
-    } else {
-      this.wsOptions = Object.assign(
-        {
-          port: 8080,
-        },
-        wsOptions,
-      );
-    }
+		if (Object.hasOwn(wsOptions, "server")) {
+			this.wsOptions = wsOptions;
+		} else {
+			this.wsOptions = Object.assign(
+				{
+					port: 8080,
+				},
+				wsOptions,
+			);
+		}
 
-    this.guacdOptions = Object.assign(
-      {
-        host: "127.0.0.1",
-        port: 4822,
-      },
-      guacdOptions,
-    );
+		this.guacdOptions = Object.assign(
+			{
+				host: "127.0.0.1",
+				port: 4822,
+			} satisfies GuacdOptions,
+			guacdOptions,
+		);
+		// @ts-expect-error here for other reasons
+		this.clientOptions = {};
+		DeepExtend(
+			this.clientOptions,
+			{
+				maxInactivityTime: 10000,
 
-    this.clientOptions = {};
-    DeepExtend(
-      this.clientOptions,
-      {
-        maxInactivityTime: 10000,
+				log: {
+					level: this.LOGLEVEL.VERBOSE,
+					stdLog: console.log,
+					errorLog: console.error,
+				},
 
-        log: {
-          level: this.LOGLEVEL.VERBOSE,
-          stdLog: console.log,
-          errorLog: console.error,
-        },
+				crypt: {
+					cypher: "aes-256-ccm",
+				},
 
-        crypt: {
-          cypher: "AES-256-CBC",
-        },
+				connectionDefaultSettings: {
+					rdp: {
+						args: "connect",
+						port: "3389",
+						width: 1024,
+						height: 768,
+						dpi: 96,
+					},
+					vnc: {
+						args: "connect",
+						port: "5900",
+						width: 1024,
+						height: 768,
+						dpi: 96,
+					},
+					ssh: {
+						args: "connect",
+						port: 22,
+						width: 1024,
+						height: 768,
+						dpi: 96,
+					},
+					telnet: {
+						args: "connect",
+						port: 23,
+						width: 1024,
+						height: 768,
+						dpi: 96,
+					},
+				},
 
-        connectionDefaultSettings: {
-          rdp: {
-            args: "connect",
-            port: "3389",
-            width: 1024,
-            height: 768,
-            dpi: 96,
-          },
-          vnc: {
-            args: "connect",
-            port: "5900",
-            width: 1024,
-            height: 768,
-            dpi: 96,
-          },
-          ssh: {
-            args: "connect",
-            port: 22,
-            width: 1024,
-            height: 768,
-            dpi: 96,
-          },
-          telnet: {
-            args: "connect",
-            port: 23,
-            width: 1024,
-            height: 768,
-            dpi: 96,
-          },
-        },
+				allowedUnencryptedConnectionSettings: {
+					rdp: ["width", "height", "dpi"],
+					vnc: ["width", "height", "dpi"],
+					ssh: ["color-scheme", "font-name", "font-size", "width", "height", "dpi"],
+					telnet: ["color-scheme", "font-name", "font-size", "width", "height", "dpi"],
+					kubernetes: ["width", "height", "dpi"],
+				},
+			} satisfies ClientOptions,
+			clientOptions,
+		);
 
-        allowedUnencryptedConnectionSettings: {
-          rdp: ["width", "height", "dpi"],
-          vnc: ["width", "height", "dpi"],
-          ssh: ["color-scheme", "font-name", "font-size", "width", "height", "dpi"],
-          telnet: ["color-scheme", "font-name", "font-size", "width", "height", "dpi"],
-        },
-      },
-      clientOptions,
-    );
+		this.callbacks = Object.assign(
+			{
+				processConnectionSettings: (settings, callback) => callback(undefined, settings),
+			} satisfies Callback,
+			callbacks,
+		);
 
-    // Backwards compatibility
-    if (this.clientOptions.log.verbose !== "undefined" && this.clientOptions.log.verbose === true) {
-      this.clientOptions.log.level = this.LOGLEVEL.DEBUG;
-    }
+		this.connectionsCount = 0;
+		this.activeConnections = new Map();
 
-    if (typeof this.clientOptions.log.level === "string" && this.LOGLEVEL[this.clientOptions.log.level]) {
-      this.clientOptions.log.level = this.LOGLEVEL[this.clientOptions.log.level];
-    }
+		if (!this.clientOptions.log?.level || this.clientOptions.log.level >= this.LOGLEVEL.NORMAL) {
+			this.clientOptions.log?.stdLog?.("Starting guacamole-lite websocket server");
+		}
 
-    this.callbacks = Object.assign(
-      {
-        processConnectionSettings: (settings, callback) => callback(undefined, settings),
-      },
-      callbacks,
-    );
+		this.webSocketServer = new Ws.Server(this.wsOptions);
+		this.webSocketServer.on("connection", this.newConnection.bind(this));
 
-    this.connectionsCount = 0;
-    this.activeConnections = new Map();
+		process.on("SIGTERM", this.close.bind(this));
+		process.on("SIGINT", this.close.bind(this));
+	}
 
-    if (this.clientOptions.log.level >= this.LOGLEVEL.NORMAL) {
-      this.clientOptions.log.stdLog("Starting guacamole-lite websocket server");
-    }
+	close() {
+		if (!this.clientOptions.log?.level || this.clientOptions.log.level >= this.LOGLEVEL.NORMAL) {
+			this.clientOptions.log?.stdLog?.("Closing all connections and exiting...");
+		}
+		for (const [, activeConnection] of this.activeConnections) {
+			activeConnection.close();
+		}
+		this.webSocketServer.close();
+	}
 
-    this.webSocketServer = new Ws.Server(this.wsOptions);
-    this.webSocketServer.on("connection", this.newConnection.bind(this));
-
-    process.on("SIGTERM", this.close.bind(this));
-    process.on("SIGINT", this.close.bind(this));
-  }
-
-  close() {
-    if (this.clientOptions.log.level >= this.LOGLEVEL.NORMAL) {
-      this.clientOptions.log.stdLog("Closing all connections and exiting...");
-    }
-
-    this.webSocketServer.close(() => {
-      for (const activeConnection of this.activeConnections) {
-        activeConnection.close();
-      }
-    });
-  }
-
-  newConnection(webSocketConnection) {
-    this.connectionsCount++;
-    this.activeConnections.set(
-      this.connectionsCount,
-      new ClientConnection(this, this.connectionsCount, webSocketConnection),
-    );
-  }
+	newConnection(webSocketConnection: Ws, upgradeRequest: IncomingMessage) {
+		this.connectionsCount++;
+		this.activeConnections.set(
+			this.connectionsCount,
+			new ClientConnection(this, this.connectionsCount, webSocketConnection, upgradeRequest),
+		);
+	}
 }
 
 export default Server;

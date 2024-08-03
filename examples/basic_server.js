@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-
-const GuacamoleLite = require("guacamole-lite");
+// @ts-check
+import GuacamoleLite from "@spaceness/guacamole-lite";
 
 const websocketOptions = {
 	port: 8080, // we will accept connections to this port
@@ -8,11 +8,12 @@ const websocketOptions = {
 
 const guacdOptions = {
 	port: 4822, // port of guacd
+	host: "localhost", // host of guacd
 };
-
+/** @type {import("@spaceness/guacamole-lite").ClientOptions} */
 const clientOptions = {
 	crypt: {
-		cypher: "AES-256-CBC",
+		cypher: "aes-256-ccm",
 		key: "MySuperSecretKeyForParamsToken12",
 	},
 };

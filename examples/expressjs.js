@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-const GuacamoleLite = require("guacamole-lite");
-const express = require("express");
-const http = require("node:http");
+import http from "node:http";
+import GuacamoleLite from "@spaceness/guacamole-lite";
+import express from "express";
 
 const app = express();
 

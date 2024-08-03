@@ -2,11 +2,29 @@ import Url from "node:url";
 import DeepExtend from "deep-extend";
 import Moment from "moment";
 
+import type { IncomingMessage } from "node:http";
+import type { ParsedUrlQuery } from "node:querystring";
+import type Websocket from "ws";
 import GuacdClient from "./client";
 import Crypt from "./crypt";
+import type Server from "./server";
+import type { ConnectionSettings, ConnectionType, LOGLEVEL } from "./types";
 
 class ClientConnection {
-	constructor(server, connectionId, webSocket) {
+	STATE_OPEN: number;
+	STATE_CLOSED: number;
+	state: number;
+	server: Server;
+	connectionId: number;
+	webSocket: Websocket;
+	query: ParsedUrlQuery;
+	lastActivity: number;
+	activityCheckInterval: NodeJS.Timeout | null;
+	guacdClient?: GuacdClient;
+	connectionSettings?: ConnectionSettings;
+	connectionType?: ConnectionType;
+	upgradeRequest: IncomingMessage;
+	constructor(server: Server, connectionId: number, webSocket: Websocket, upgradeRequest: IncomingMessage) {
 		this.STATE_OPEN = 1;
 		this.STATE_CLOSED = 2;
 
@@ -15,7 +33,8 @@ class ClientConnection {
 		this.server = server;
 		this.connectionId = connectionId;
 		this.webSocket = webSocket;
-		this.query = Url.parse(this.webSocket.upgradeReq.url, true).query;
+		this.upgradeRequest = upgradeRequest;
+		this.query = Url.parse(this.upgradeRequest.url as string, true).query;
 		this.lastActivity = Date.now();
 		this.activityCheckInterval = null;
 
@@ -24,18 +43,18 @@ class ClientConnection {
 		try {
 			this.connectionSettings = this.decryptToken();
 
-			this.connectionType = this.connectionSettings.connection.type;
+			this.connectionType = this.connectionSettings?.connection?.type;
 
-			this.connectionSettings.connection = this.mergeConnectionOptions();
+			this.connectionSettings.connection = this.mergeConnectionOptions() as ConnectionSettings["connection"];
 		} catch (error) {
 			this.log(this.server.LOGLEVEL.ERRORS, "Token validation failed");
-			this.close(error);
+			this.close(error as Error);
 			return;
 		}
 
 		server.callbacks.processConnectionSettings(this.connectionSettings, (err, settings) => {
 			if (err) {
-				return this.close(err);
+				return this.close(err as Error);
 			}
 
 			this.connectionSettings = settings;
@@ -53,22 +72,22 @@ class ClientConnection {
 		});
 	}
 
-	decryptToken() {
+	decryptToken(): ConnectionSettings {
 		const crypt = new Crypt(this.server);
 
 		const encrypted = this.query.token;
 		this.query.token = undefined;
 
-		return crypt.decrypt(encrypted);
+		return crypt.decrypt(encrypted as string);
 	}
 
-	log(level, ...args) {
-		if (level > this.server.clientOptions.log.level) {
+	log(level: LOGLEVEL, ...args: string[]) {
+		if (this.server.clientOptions.log?.level && level > this.server.clientOptions.log.level) {
 			return;
 		}
 
-		const stdLogFunc = this.server.clientOptions.log.stdLog;
-		const errorLogFunc = this.server.clientOptions.log.errorLog;
+		const stdLogFunc = this.server.clientOptions.log?.stdLog || console.log;
+		const errorLogFunc = this.server.clientOptions.log?.errorLog || console.error;
 
 		let logFunc = stdLogFunc;
 		if (level === this.server.LOGLEVEL.ERRORS) {
@@ -82,7 +101,7 @@ class ClientConnection {
 		return `[${Moment().format("YYYY-MM-DD HH:mm:ss")}] [Connection ${this.connectionId}] `;
 	}
 
-	close(error) {
+	close(error?: Error) {
 		if (this.state === this.STATE_CLOSED) {
 			return;
 		}
@@ -92,7 +111,7 @@ class ClientConnection {
 		}
 
 		if (error) {
-			this.log(this.server.LOGLEVEL.ERRORS, "Closing connection with error: ", error);
+			this.log(this.server.LOGLEVEL.ERRORS, "Closing connection with error: ", error.message);
 		}
 
 		if (this.guacdClient) {
@@ -108,17 +127,19 @@ class ClientConnection {
 		this.log(this.server.LOGLEVEL.VERBOSE, "Client connection closed");
 	}
 
-	error(error) {
-		this.server.emit("error", this, error);
+	error(error?: Error) {
+		if (error) {
+			this.server.emit("error", this, error);
+		}
 		this.close(error);
 	}
 
-	processReceivedMessage(message) {
+	processReceivedMessage(message: string | Buffer) {
 		this.lastActivity = Date.now();
-		this.guacdClient.send(message);
+		this.guacdClient?.send(message);
 	}
 
-	send(message) {
+	send(message: string | Buffer) {
 		if (this.state === this.STATE_CLOSED) {
 			return;
 		}
@@ -132,11 +153,21 @@ class ClientConnection {
 	}
 
 	mergeConnectionOptions() {
-		const unencryptedConnectionSettings = {};
+		const unencryptedConnectionSettings: Record<ConnectionType, unknown> = {
+			rdp: undefined,
+			vnc: undefined,
+			ssh: undefined,
+			telnet: undefined,
+			kubernetes: undefined,
+		};
 
 		for (const key of Object.keys(this.query)) {
-			if (this.server.clientOptions.allowedUnencryptedConnectionSettings[this.connectionType].includes(key)) {
-				unencryptedConnectionSettings[key] = this.query[key];
+			if (
+				this.server.clientOptions.allowedUnencryptedConnectionSettings?.[
+					this.connectionType as ConnectionType
+				].includes(key)
+			) {
+				unencryptedConnectionSettings[key as ConnectionType] = this.query[key];
 			}
 		}
 
@@ -144,8 +175,8 @@ class ClientConnection {
 
 		DeepExtend(
 			compiledSettings,
-			this.server.clientOptions.connectionDefaultSettings[this.connectionType],
-			this.connectionSettings.connection.settings,
+			this.server.clientOptions?.connectionDefaultSettings?.[this.connectionType as ConnectionType] || {},
+			this.connectionSettings?.connection.settings || {},
 			unencryptedConnectionSettings,
 		);
 

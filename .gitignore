@@ -40,3 +40,5 @@ jspm_packages
 
 package-lock.json
 mp.sh
+
+*.tsbuildinfo

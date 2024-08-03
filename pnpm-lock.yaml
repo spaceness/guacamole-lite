@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@spaceness/guacamole-lite':
+        specifier: 'link:'
+        version: 'link:'
       deep-extend:
         specifier: ^0.6.0
         version: 0.6.0

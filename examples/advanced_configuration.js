@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const GuacamoleLite = require("guacamole-lite");
+import { GuacamoleLite } from "@spaceness/guacamole-lite";
 const http = require("node:http");
 
 // [OPTIONAL] websocketOptions
