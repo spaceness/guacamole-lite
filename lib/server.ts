@@ -8,7 +8,7 @@ import type { LOGLEVEL } from "./enums";
 import type { Callback, ClientOptions, GuacdOptions } from "./types";
 
 class Server extends EventEmitter {
-	wsOptions: Ws.ClientOptions;
+	wsOptions: Ws.ServerOptions;
 	LOGLEVEL: typeof LOGLEVEL;
 	guacdOptions: GuacdOptions;
 	clientOptions: ClientOptions;
@@ -125,9 +125,10 @@ class Server extends EventEmitter {
 
 		this.webSocketServer = new Ws.Server(this.wsOptions);
 		this.webSocketServer.on("connection", this.newConnection.bind(this));
-
-		process.on("SIGTERM", this.close.bind(this));
-		process.on("SIGINT", this.close.bind(this));
+		if (!Object.hasOwn(wsOptions, "server") || !wsOptions.noServer) {
+			process.on("SIGTERM", this.close.bind(this));
+			process.on("SIGINT", this.close.bind(this));
+		}
 	}
 
 	close() {
