@@ -1,10 +1,10 @@
 {
 	"name": "@spaceness/guacamole-lite",
 	"description": "Spaceness fork of guacamole-lite",
-	"version": "0.7.7-patch.5",
+	"version": "0.7.7-patch.6",
 	"type": "module",
 	"main": "dist/index.js",
-	"types": "./types/index.d.ts",
+	"types": "./dist/index.d.ts",
 	"scripts": {
 		"prepare": "rm -rf dist && tsc && pnpm check",
 		"check": "biome check --write ."

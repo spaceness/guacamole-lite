@@ -9,6 +9,7 @@
 		"strict": true,
 		"forceConsistentCasingInFileNames": true,
 		"noEmit": false,
+		"declaration": true,
 		"esModuleInterop": true,
 		"module": "esnext",
 		"moduleResolution": "node",
