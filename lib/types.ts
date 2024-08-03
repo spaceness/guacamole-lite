@@ -25,10 +25,11 @@ export interface GuacdOptions {
 interface BaseProtOptions {
 	args: string;
 	hostname?: string;
-	port: number | string;
-	width: number;
-	height: number;
-	dpi: number;
+	port?: number | string;
+	width?: number;
+	height?: number;
+	dpi?: number;
+	[key: string]: unknown;
 }
 export interface ClientOptions {
 	maxInactivityTime: number;

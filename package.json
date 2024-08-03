@@ -1,7 +1,7 @@
 {
 	"name": "@spaceness/guacamole-lite",
 	"description": "Spaceness fork of guacamole-lite",
-	"version": "0.7.6-patch.1",
+	"version": "0.7.6-patch.2",
 	"type": "module",
 	"exports": {
 		".": "./index.ts"
