@@ -8,7 +8,7 @@
 	},
 	"types": "./lib/index.d.ts",
 	"scripts": {
-		"prepare": "tsc && pnpm check",
+		"prepare": "rm -rf dist && tsc && pnpm check",
 		"check": "biome check --write ."
 	},
 	"keywords": ["guacamole", "rdp", "vnc", "remote desktop"],

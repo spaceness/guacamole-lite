@@ -8,11 +8,11 @@
 		"lineEnding": "lf",
 		"lineWidth": 120,
 		"attributePosition": "auto",
-		"ignore": ["**/pnpm-lock.yaml", "**/node_modules/**"]
+		"ignore": ["**/pnpm-lock.yaml", "**/node_modules/**", "**/dist/**"]
 	},
 	"organizeImports": {
 		"enabled": true,
-		"ignore": ["**/pnpm-lock.yaml", "**/node_modules/**"]
+		"ignore": ["**/pnpm-lock.yaml", "**/node_modules/**", "**/dist/**"]
 	},
 	"linter": {
 		"enabled": true,
@@ -22,7 +22,7 @@
 				"noParameterAssign": "off"
 			}
 		},
-		"ignore": ["**/pnpm-lock.yaml", "**/node_modules/**"]
+		"ignore": ["**/pnpm-lock.yaml", "**/node_modules/**", "**/dist/**"]
 	},
 	"javascript": {
 		"formatter": {
