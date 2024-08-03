@@ -1,0 +1,8 @@
+biome.json
+*.ts
+!*.d.ts
+pnpm-lock.yaml
+tsconfig.json
+*.tsbuildinfo
+node_modules/
+examples/
