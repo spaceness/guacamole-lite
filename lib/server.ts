@@ -31,7 +31,7 @@ class Server extends EventEmitter {
 			DEBUG: 40,
 		};
 
-		if (Object.hasOwn(wsOptions, "server")) {
+		if (Object.hasOwn(wsOptions, "server") || wsOptions.noServer) {
 			this.wsOptions = wsOptions;
 		} else {
 			this.wsOptions = Object.assign(
