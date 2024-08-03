@@ -10,7 +10,7 @@ class Server extends EventEmitter {
 	wsOptions: Ws.ClientOptions;
 	LOGLEVEL: typeof LOGLEVEL;
 	guacdOptions: GuacdOptions;
-	clientOptions: ClientOptions;
+	clientOptions: Omit<ClientOptions, "connectionDefaultSettings">;
 	callbacks: Callback;
 	connectionsCount: number;
 	activeConnections: Map<number, ClientConnection>;
