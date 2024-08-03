@@ -3,8 +3,9 @@ import DeepExtend from "deep-extend";
 import Ws from "ws";
 
 import type { IncomingMessage } from "node:http";
+import type { Callback, ClientOptions, GuacdOptions } from "./";
 import ClientConnection from "./connection";
-import type { Callback, ClientOptions, GuacdOptions, LOGLEVEL } from "./types";
+import type { LOGLEVEL } from "./enums";
 
 class Server extends EventEmitter {
 	wsOptions: Ws.ClientOptions;

@@ -1,7 +1,7 @@
 import Net from "node:net";
 import type ClientConnection from "./connection";
+import type { LOGLEVEL } from "./enums";
 import type Server from "./server";
-import type { LOGLEVEL } from "./types";
 class GuacdClient {
 	STATE_OPENING: number;
 	STATE_OPEN: number;

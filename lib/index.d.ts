@@ -1,12 +1,5 @@
 import type { CipherCCMTypes, CipherGCMTypes, CipherKey } from "node:crypto";
 
-export enum LOGLEVEL {
-	QUIET = 0,
-	ERRORS = 10,
-	NORMAL = 20,
-	VERBOSE = 30,
-	DEBUG = 40,
-}
 export type Callback = {
 	[key: string]: (settings: ConnectionSettings, callback: (err: unknown, settings: ConnectionSettings) => void) => void;
 };
