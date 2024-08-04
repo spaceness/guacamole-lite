@@ -1,4 +1,4 @@
-import type { CipherCCMTypes, CipherGCMTypes, CipherKey } from "node:crypto";
+import type { CipherCCMTypes, CipherGCMTypes, CipherKey, CipherOCBTypes } from "node:crypto";
 import type { LOGLEVEL } from "./enums";
 
 export type Callback = {
@@ -33,8 +33,8 @@ export interface ClientOptions {
 	 * Ideally, you'd want to keep them in a separate file and not commit them to your repository.
 	 */
 	crypt: {
-		cypher: CipherCCMTypes | CipherGCMTypes;
-		key?: CipherKey;
+		cypher: CipherCCMTypes | CipherGCMTypes | CipherOCBTypes | string;
+		key: CipherKey;
 	};
 
 	/**

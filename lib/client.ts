@@ -138,9 +138,10 @@ class GuacdClient {
 	}
 
 	static formatOpCode(opCodeParts: string[]) {
-		for (let part of opCodeParts) {
+		for (let index = 0; index < opCodeParts.length; index++) {
+			let part = opCodeParts[index];
 			part = GuacdClient.stringifyOpCodePart(part);
-			opCodeParts[opCodeParts.indexOf(part)] = `${part.length}.${part}`;
+			opCodeParts[index] = `${part.length}.${part}`;
 		}
 		return `${opCodeParts.join(",")};`;
 	}

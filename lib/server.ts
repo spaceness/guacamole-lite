@@ -65,6 +65,7 @@ class Server extends EventEmitter {
 
 				crypt: {
 					cypher: "aes-256-ccm",
+					key: "",
 				},
 
 				connectionDefaultSettings: {
