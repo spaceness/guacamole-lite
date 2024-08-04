@@ -4,7 +4,7 @@ import Ws from "ws";
 
 import type { IncomingMessage } from "node:http";
 import ClientConnection from "./connection";
-import type { LOGLEVEL } from "./enums";
+import { LOGLEVEL } from "./enums";
 import type { Callback, ClientOptions, GuacdOptions } from "./types";
 
 class Server extends EventEmitter {
@@ -19,18 +19,12 @@ class Server extends EventEmitter {
 	constructor(
 		wsOptions: Ws.ServerOptions,
 		guacdOptions: GuacdOptions,
-		clientOptions: Omit<ClientOptions, "connectionDefaultSettings">,
+		clientOptions: ClientOptions,
 		callbacks?: Callback,
 	) {
 		super();
 
-		this.LOGLEVEL = {
-			QUIET: 0,
-			ERRORS: 10,
-			NORMAL: 20,
-			VERBOSE: 30,
-			DEBUG: 40,
-		};
+		this.LOGLEVEL = LOGLEVEL;
 
 		if (Object.hasOwn(wsOptions, "server") || wsOptions.noServer) {
 			this.wsOptions = wsOptions;
@@ -64,7 +58,7 @@ class Server extends EventEmitter {
 				},
 
 				crypt: {
-					cypher: "aes-256-ccm",
+					cypher: "aes-256-cbc",
 					key: "",
 				},
 

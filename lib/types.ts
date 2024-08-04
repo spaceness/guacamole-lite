@@ -4,17 +4,27 @@ import type { LOGLEVEL } from "./enums";
 export type Callback = {
 	[key: string]: (settings: ConnectionSettings, callback: (err: unknown, settings: ConnectionSettings) => void) => void;
 };
+// todo: fix this garbage
 export interface ConnectionSettings {
-	connection: ClientOptions["connectionDefaultSettings"][ConnectionType] & {
+	type: ConnectionType;
+	settings: ConnectionOptions[ConnectionType];
+	connection: ConnectionOptions[ConnectionType] & {
 		type: ConnectionType;
-		settings: ClientOptions["connectionDefaultSettings"][ConnectionType];
 	};
 }
 export type ConnectionType = "rdp" | "vnc" | "ssh" | "telnet" | "kubernetes";
 
 export interface GuacdOptions {
-	host: string;
-	port: number;
+	/**
+	 * Guacamole server hostname
+	 * @default "127.0.0.1"
+	 */
+	host?: string;
+	/**
+	 * Guacamole server port
+	 * @default 4822
+	 */
+	port?: number;
 }
 interface BaseProtOptions {
 	args?: string;
@@ -25,8 +35,76 @@ interface BaseProtOptions {
 	dpi?: number;
 	[key: string]: unknown;
 }
+export interface ConnectionOptions {
+	/**
+	 * RDP connection parameters
+	 * https://guacamole.incubator.apache.org/doc/gug/configuring-guacamole.html#rdp
+	 * https://guacamole.incubator.apache.org/doc/gug/configuring-guacamole.html#common-configuration-options
+	 */
+	rdp?: BaseProtOptions & {
+		username?: string;
+		password?: string;
+		domain?: string;
+		security?: string;
+		"create-drive-path"?: boolean;
+		"ignore-cert"?: boolean;
+		"enable-wallpaper"?: boolean;
+		"create-recording-path"?: boolean;
+
+		/**
+		 * Client handshake instructions
+		 * https://guacamole.incubator.apache.org/doc/gug/protocol-reference.html#client-handshake-instructions
+		 */
+		audio?: string[];
+		video?: string[];
+		image?: string[];
+		timezone?: string;
+	};
+	vnc?: BaseProtOptions & {
+		/**
+		 * VNC connection parameters
+		 * https://guacamole.incubator.apache.org/doc/gug/configuring-guacamole.html#vnc
+		 * https://guacamole.incubator.apache.org/doc/gug/configuring-guacamole.html#common-configuration-options
+		 */
+		"swap-red-blue"?: boolean;
+		"disable-paste"?: boolean;
+	};
+	ssh?: BaseProtOptions & {
+		/**
+		 * SSH connection parameters
+		 * https://guacamole.incubator.apache.org/doc/gug/configuring-guacamole.html#ssh
+		 * https://guacamole.incubator.apache.org/doc/gug/configuring-guacamole.html#common-configuration-options
+		 */
+		"enable-sftp"?: boolean;
+		"green-black"?: boolean;
+	};
+	telnet?: BaseProtOptions & {
+		/**
+		 * Telnet connection parameters
+		 * https://guacamole.incubator.apache.org/doc/gug/configuring-guacamole.html#telnet
+		 * https://guacamole.incubator.apache.org/doc/gug/configuring-guacamole.html#common-configuration-options
+		 */
+		"login-success-regex"?: string;
+	};
+	kubernetes?: BaseProtOptions & {
+		/**
+		 * Kubernetes connection parameters
+		 * https://guacamole.incubator.apache.org/doc/gug/configuring-guacamole.html#kubernetes
+		 * https://guacamole.incubator.apache.org/doc/gug/configuring-guacamole.html#common-configuration-options
+		 */
+		"exec-command"?: string;
+		namespace?: string;
+		pod: string;
+		container?: string;
+		port?: string;
+	};
+}
+
 export interface ClientOptions {
-	maxInactivityTime: number;
+	/**
+	 * @default 10000
+	 */
+	maxInactivityTime?: number;
 
 	/**
 	 * Encryption settings used to decrypt the connection token.
@@ -70,70 +148,7 @@ export interface ClientOptions {
 	 * For the list of client handshake instructions
 	 * see https://guacamole.incubator.apache.org/doc/gug/protocol-reference.html#client-handshake-instructions
 	 */
-	connectionDefaultSettings: {
-		/**
-		 * RDP connection parameters
-		 * https://guacamole.incubator.apache.org/doc/gug/configuring-guacamole.html#rdp
-		 * https://guacamole.incubator.apache.org/doc/gug/configuring-guacamole.html#common-configuration-options
-		 */
-		rdp?: BaseProtOptions & {
-			username?: string;
-			password?: string;
-			domain?: string;
-			security?: string;
-			"create-drive-path"?: boolean;
-			"ignore-cert"?: boolean;
-			"enable-wallpaper"?: boolean;
-			"create-recording-path"?: boolean;
-
-			/**
-			 * Client handshake instructions
-			 * https://guacamole.incubator.apache.org/doc/gug/protocol-reference.html#client-handshake-instructions
-			 */
-			audio?: string[];
-			video?: string[];
-			image?: string[];
-			timezone?: string;
-		};
-		vnc?: BaseProtOptions & {
-			/**
-			 * VNC connection parameters
-			 * https://guacamole.incubator.apache.org/doc/gug/configuring-guacamole.html#vnc
-			 * https://guacamole.incubator.apache.org/doc/gug/configuring-guacamole.html#common-configuration-options
-			 */
-			"swap-red-blue"?: boolean;
-			"disable-paste"?: false;
-		};
-		ssh?: BaseProtOptions & {
-			/**
-			 * SSH connection parameters
-			 * https://guacamole.incubator.apache.org/doc/gug/configuring-guacamole.html#ssh
-			 * https://guacamole.incubator.apache.org/doc/gug/configuring-guacamole.html#common-configuration-options
-			 */
-			"enable-sftp"?: boolean;
-			"green-black"?: boolean;
-		};
-		telnet?: BaseProtOptions & {
-			/**
-			 * Telnet connection parameters
-			 * https://guacamole.incubator.apache.org/doc/gug/configuring-guacamole.html#telnet
-			 * https://guacamole.incubator.apache.org/doc/gug/configuring-guacamole.html#common-configuration-options
-			 */
-			"login-success-regex"?: string;
-		};
-		kubernetes?: BaseProtOptions & {
-			/**
-			 * Kubernetes connection parameters
-			 * https://guacamole.incubator.apache.org/doc/gug/configuring-guacamole.html#kubernetes
-			 * https://guacamole.incubator.apache.org/doc/gug/configuring-guacamole.html#common-configuration-options
-			 */
-			"exec-command"?: string;
-			namespace?: string;
-			pod: string;
-			container?: string;
-			port?: string;
-		};
-	};
+	connectionDefaultSettings?: ConnectionOptions;
 
 	/**
 	 * The connection parameters from the encrypted token can be overridden by the client by sending them

@@ -43,7 +43,6 @@ class ClientConnection {
 
 		try {
 			this.connectionSettings = this.decryptToken();
-
 			this.connectionType = this.connectionSettings?.connection?.type;
 
 			this.connectionSettings.connection = this.mergeConnectionOptions() as ConnectionSettings["connection"];
@@ -67,7 +66,7 @@ class ClientConnection {
 			webSocket.on("close", this.close.bind(this));
 			webSocket.on("message", this.processReceivedMessage.bind(this));
 
-			if (server.clientOptions.maxInactivityTime > 0) {
+			if ((server.clientOptions.maxInactivityTime || 10000) > 0) {
 				this.activityCheckInterval = setInterval(this.checkActivity.bind(this), 1000);
 			}
 		});
@@ -177,7 +176,7 @@ class ClientConnection {
 		DeepExtend(
 			compiledSettings,
 			this.server.clientOptions?.connectionDefaultSettings?.[this.connectionType as ConnectionType] || {},
-			this.connectionSettings?.connection.settings || {},
+			this.connectionSettings?.connection?.settings || {},
 			unencryptedConnectionSettings,
 		);
 
@@ -185,7 +184,7 @@ class ClientConnection {
 	}
 
 	checkActivity() {
-		if (Date.now() > this.lastActivity + this.server.clientOptions.maxInactivityTime) {
+		if (Date.now() > this.lastActivity + (this.server.clientOptions.maxInactivityTime || 10000)) {
 			this.close(new Error("WS was inactive for too long"));
 		}
 	}

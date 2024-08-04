@@ -27,7 +27,7 @@ class GuacdClient {
 		this.receivedBuffer = "";
 		this.lastActivity = Date.now();
 
-		this.guacdConnection = Net.connect(server.guacdOptions.port, server.guacdOptions.host);
+		this.guacdConnection = Net.connect(server.guacdOptions.port || 4822, server.guacdOptions.host || "127.0.0.1");
 
 		this.guacdConnection.on("connect", this.processConnectionOpen.bind(this));
 		this.guacdConnection.on("data", this.processReceivedData.bind(this));
@@ -86,9 +86,9 @@ class GuacdClient {
 	sendHandshakeReply() {
 		this.sendOpCode([
 			"size",
-			this.clientConnection.connectionSettings?.connection.width?.toString() as string,
-			this.clientConnection.connectionSettings?.connection.height?.toString() as string,
-			this.clientConnection.connectionSettings?.connection.dpi?.toString() as string,
+			this.clientConnection.connectionSettings?.connection?.width?.toString() as string,
+			this.clientConnection.connectionSettings?.connection?.height?.toString() as string,
+			this.clientConnection.connectionSettings?.connection?.dpi?.toString() as string,
 		]);
 		this.sendOpCode(["audio"].concat(this.clientConnection.query.GUAC_AUDIO || []));
 		this.sendOpCode(["video"].concat(this.clientConnection.query.GUAC_VIDEO || []));
@@ -117,7 +117,7 @@ class GuacdClient {
 
 	getConnectionOption(optionName: string) {
 		return (
-			this.clientConnection.connectionSettings?.connection[
+			this.clientConnection.connectionSettings?.connection?.[
 				GuacdClient.parseOpCodeAttribute(optionName) as keyof typeof this.clientConnection.connectionSettings.connection
 			] || null
 		);

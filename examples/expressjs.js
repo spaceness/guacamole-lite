@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 import http from "node:http";
 import GuacamoleLite from "@spaceness/guacamole-lite";
 import express from "express";
@@ -11,7 +10,7 @@ const server = http.createServer(app);
 const guacdOptions = {
 	port: 4822, // port of guacd
 };
-
+/** @type {import("@spaceness/guacamole-lite").ClientOptions}*/
 const clientOptions = {
 	crypt: {
 		cypher: "AES-256-CBC",
